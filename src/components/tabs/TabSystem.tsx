@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAppState } from "@/state/appState";
+import { useNavigate } from "react-router-dom";
 
 export default function TabSystem() {
   const { state, dispatch } = useAppState();
@@ -50,18 +51,54 @@ export default function TabSystem() {
 
 function BrowseTab({ tabId, url }: { tabId: string; url: string }) {
   const { dispatch } = useAppState();
+  const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleNavigate = (raw: string) => {
+    if (!raw) return;
+    let v = raw.trim();
+    // Same-origin/internal route detection
+    let isInternal = v.startsWith("/");
+    try {
+      const u = new URL(v, window.location.origin);
+      if (u.origin === window.location.origin) {
+        // If user typed full same-origin URL
+        isInternal = true;
+        v = u.pathname + u.search + u.hash;
+      }
+    } catch {
+      // ignore URL parse errors
+    }
+
+    if (isInternal) {
+      navigate(v);
+      return;
+    }
+
+    // Ensure protocol for external URLs
+    const external = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+    dispatch({ type: "UPDATE_TAB_URL", payload: { id: tabId, url: external } });
+  };
 
   return (
     <div className="h-full flex flex-col">
       <div className="p-2 flex items-center gap-2 border-b bg-muted/30">
-        <Input ref={inputRef} defaultValue={url} placeholder="Enter URL" onKeyDown={(e) => {
-          if (e.key === "Enter") dispatch({ type: "UPDATE_TAB_URL", payload: { id: tabId, url: (e.target as HTMLInputElement).value } });
-        }} />
-        <Button onClick={() => {
-          const v = inputRef.current?.value?.trim();
-          if (v) dispatch({ type: "UPDATE_TAB_URL", payload: { id: tabId, url: v } });
-        }}>Go</Button>
+        <Input
+          ref={inputRef}
+          defaultValue={url}
+          placeholder="Enter URL"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleNavigate((e.target as HTMLInputElement).value);
+          }}
+        />
+        <Button
+          onClick={() => {
+            const v = inputRef.current?.value ?? "";
+            handleNavigate(v);
+          }}
+        >
+          Go
+        </Button>
       </div>
       <div className="flex-1 min-h-0">
         {url ? (
