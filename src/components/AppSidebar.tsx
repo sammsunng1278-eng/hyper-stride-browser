@@ -16,10 +16,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 interface AppSidebarProps {
   onOpenVPN: () => void;
   onShutdown: () => void;
+  pinned: boolean;
 }
 
-export function AppSidebar({ onOpenVPN, onShutdown }: AppSidebarProps) {
-  const { state } = useSidebar();
+export function AppSidebar({ onOpenVPN, onShutdown, pinned }: AppSidebarProps) {
+  const { state, setOpen } = useSidebar();
   const location = useLocation();
   const collapsed = state === "collapsed";
 
@@ -27,7 +28,7 @@ export function AppSidebar({ onOpenVPN, onShutdown }: AppSidebarProps) {
     isActive ? "bg-muted text-primary font-medium" : "hover:bg-muted/50";
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" onMouseEnter={() => { if (!pinned) setOpen(true); }} onMouseLeave={() => { if (!pinned) setOpen(false); }}>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Hyper AI</SidebarGroupLabel>

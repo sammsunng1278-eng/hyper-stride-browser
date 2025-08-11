@@ -9,7 +9,7 @@ export default function TabSystem() {
 
   const addBrowseTab = () => {
     const id = `tab-${Date.now()}`;
-    dispatch({ type: "ADD_TAB", payload: { id, title: "New Tab", type: "browse", url: "https://duckduckgo.com" } });
+    dispatch({ type: "ADD_TAB", payload: { id, title: "New Tab", type: "browse", url: "" } });
   };
 
   const closeTab = (id: string) => dispatch({ type: "CLOSE_TAB", payload: { id } });
@@ -36,8 +36,12 @@ export default function TabSystem() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
-        {active?.type === "browse" && <BrowseTab tabId={active.id} url={active.url ?? ""} />}
+      <div className="flex-1 min-h-0 relative">
+        {state.tabs.filter((t) => t.type === "browse").map((tab) => (
+          <div key={tab.id} className={state.activeTabId === tab.id ? "absolute inset-0 block" : "absolute inset-0 hidden"}>
+            <BrowseTab tabId={tab.id} url={tab.url ?? ""} />
+          </div>
+        ))}
         {active?.type === "automation" && <AutomationTab automationId={active.automationId!} />}
       </div>
     </div>

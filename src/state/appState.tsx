@@ -85,7 +85,7 @@ const defaultState: AppState = {
   bookmarks: [],
   profiles: [],
   tabs: [
-    { id: "tab-home", title: "New Tab", type: "browse", url: "https://example.com" },
+    { id: "tab-home", title: "New Tab", type: "browse", url: "" },
   ],
   activeTabId: "tab-home",
   automationActivity: 0,
