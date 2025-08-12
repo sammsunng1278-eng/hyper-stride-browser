@@ -53,6 +53,7 @@ function BrowseTab({ tabId, url }: { tabId: string; url: string }) {
   const { dispatch } = useAppState();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleNavigate = (raw: string) => {
     if (!raw) return;
@@ -80,6 +81,22 @@ function BrowseTab({ tabId, url }: { tabId: string; url: string }) {
     dispatch({ type: "UPDATE_TAB_URL", payload: { id: tabId, url: external } });
   };
 
+  const handleIframeLoad = () => {
+    // If the iframe has navigated to our own app, break out into the shell
+    try {
+      const loc = iframeRef.current?.contentWindow?.location;
+      if (!loc) return;
+      if (loc.origin === window.location.origin) {
+        const path = loc.pathname + loc.search + loc.hash;
+        navigate(path);
+        // Clear the tab URL so the iframe goes back to the blank state
+        dispatch({ type: "UPDATE_TAB_URL", payload: { id: tabId, url: "" } });
+      }
+    } catch {
+      // Cross-origin — ignore
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-2 flex items-center gap-2 border-b bg-muted/30">
@@ -102,7 +119,14 @@ function BrowseTab({ tabId, url }: { tabId: string; url: string }) {
       </div>
       <div className="flex-1 min-h-0">
         {url ? (
-          <iframe title="browser" src={url} className="w-full h-full" sandbox="allow-scripts allow-forms allow-same-origin allow-popups" />
+          <iframe
+            title="browser"
+            ref={iframeRef}
+            src={url}
+            className="w-full h-full"
+            sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+            onLoad={handleIframeLoad}
+          />
         ) : (
           <div className="h-full flex items-center justify-center text-muted-foreground">Enter a URL to start browsing.</div>
         )}
